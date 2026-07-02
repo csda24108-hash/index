@@ -127,16 +127,34 @@
             updateDisplay();
         }
 
+        // --- フリック入力の処理（修正版） ---
         let startX = 0;
         let startY = 0;
         let isDragging = false;
+        let activePointerId = null;
         const THRESHOLD = 30;
 
+        function resetDrag(e) {
+            isDragging = false;
+            activePointerId = null;
+            inputPad.style.backgroundColor = "#eef";
+
+            if (e && inputPad.hasPointerCapture && inputPad.hasPointerCapture(e.pointerId)) {
+                inputPad.releasePointerCapture(e.pointerId);
+            }
+        }
+
+        inputPad.addEventListener("contextmenu", (e) => {
+            // 右クリックメニューでフリック処理が邪魔されないようにする
+            e.preventDefault();
+        });
+
         inputPad.addEventListener("pointerdown", (e) => {
-            // 【修正ポイント①】左クリック（0）以外は処理を中断する（#11のバグ対応）
+            // 左クリック以外は無視する
             if (e.button !== 0) return;
 
             isDragging = true;
+            activePointerId = e.pointerId;
             startX = e.clientX;
             startY = e.clientY;
             inputPad.style.backgroundColor = "#ccf";
@@ -145,18 +163,25 @@
 
         inputPad.addEventListener("pointerup", (e) => {
             if (!isDragging) return;
-            isDragging = false;
-            inputPad.style.backgroundColor = "#eef";
-            inputPad.releasePointerCapture(e.pointerId);
 
             const endX = e.clientX;
             const endY = e.clientY;
 
-            // 【修正ポイント②】ブラウザの画面外で離された場合は入力をキャンセルする（#10のバグ対応）
-            if (endX < 0 || endY < 0 || endX > window.innerWidth || endY > window.innerHeight) {
+            // 先に後片付けする
+            resetDrag(e);
+
+            // 入力パッドの範囲外で離した場合は、入力せずキャンセルする
+            const rect = inputPad.getBoundingClientRect();
+            const isOutsidePad =
+                endX < rect.left ||
+                endX > rect.right ||
+                endY < rect.top ||
+                endY > rect.bottom;
+
+            if (isOutsidePad) {
                 return;
             }
-            
+
             const dx = endX - startX;
             const dy = endY - startY;
 
@@ -184,8 +209,13 @@
         });
 
         inputPad.addEventListener("pointercancel", (e) => {
-            isDragging = false;
-            inputPad.style.backgroundColor = "#eef";
+            resetDrag(e);
+        });
+
+        inputPad.addEventListener("lostpointercapture", (e) => {
+            if (isDragging) {
+                resetDrag(e);
+            }
         });
     </script>
 
