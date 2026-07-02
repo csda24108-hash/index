@@ -28,7 +28,6 @@
             white-space: nowrap;
         }
 
-        /* 入力パッドのスタイル（十字配置に変更） */
         #input-pad {
             width: 250px;
             height: 250px;
@@ -36,7 +35,6 @@
             border: 3px dashed #888;
             border-radius: 15px;
             background-color: #eef;
-            /* Gridレイアウトで3x3のマス目を作る */
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
@@ -46,11 +44,9 @@
             font-weight: bold;
             color: #555;
             cursor: crosshair;
-            /* タッチデバイスでのスクロールを防止 */
             touch-action: none; 
         }
 
-        /* フリックガイドの文字色を少し薄くする */
         .guide-char {
             color: #888;
         }
@@ -131,24 +127,22 @@
             updateDisplay();
         }
 
-        // --- ここからマウスドラッグ（フリック）の処理 ---
         let startX = 0;
         let startY = 0;
         let isDragging = false;
-        const THRESHOLD = 30; // フリックと判定する最低移動距離(ピクセル)
+        const THRESHOLD = 30;
 
-        // ポインター（マウス/タッチ）を押したとき
         inputPad.addEventListener("pointerdown", (e) => {
+            // 【修正ポイント①】左クリック（0）以外は処理を中断する（#11のバグ対応）
+            if (e.button !== 0) return;
+
             isDragging = true;
             startX = e.clientX;
             startY = e.clientY;
-            inputPad.style.backgroundColor = "#ccf"; // 押下中の視覚フィードバック
-            
-            // ポインターをキャプチャ
+            inputPad.style.backgroundColor = "#ccf";
             inputPad.setPointerCapture(e.pointerId);
         });
 
-        // ポインターを離したとき
         inputPad.addEventListener("pointerup", (e) => {
             if (!isDragging) return;
             isDragging = false;
@@ -157,30 +151,31 @@
 
             const endX = e.clientX;
             const endY = e.clientY;
+
+            // 【修正ポイント②】ブラウザの画面外で離された場合は入力をキャンセルする（#10のバグ対応）
+            if (endX < 0 || endY < 0 || endX > window.innerWidth || endY > window.innerHeight) {
+                return;
+            }
             
             const dx = endX - startX;
             const dy = endY - startY;
 
             let charToInput = "";
 
-            // 移動距離が閾値未満なら「あ」（動かさない/タップ）
             if (Math.abs(dx) < THRESHOLD && Math.abs(dy) < THRESHOLD) {
                 charToInput = "あ";
             } else {
-                // 水平方向と垂直方向、どちらへの移動量が大きいかで判定
                 if (Math.abs(dx) > Math.abs(dy)) {
-                    // 水平方向の移動
                     if (dx > 0) {
-                        charToInput = "え"; // 右
+                        charToInput = "え";
                     } else {
-                        charToInput = "い"; // 左
+                        charToInput = "い";
                     }
                 } else {
-                    // 垂直方向の移動
                     if (dy > 0) {
-                        charToInput = "お"; // 下
+                        charToInput = "お";
                     } else {
-                        charToInput = "う"; // 上
+                        charToInput = "う";
                     }
                 }
             }
@@ -188,7 +183,6 @@
             addChar(charToInput);
         });
 
-        // キャプチャがキャンセルされた場合の処理
         inputPad.addEventListener("pointercancel", (e) => {
             isDragging = false;
             inputPad.style.backgroundColor = "#eef";
