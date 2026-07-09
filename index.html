@@ -13,6 +13,7 @@
             user-select: none; 
             -webkit-user-select: none;
         }
+        
         #output-area {
             width: 80%;
             max-width: 400px;
@@ -28,19 +29,24 @@
             white-space: nowrap;
         }
 
-        /* 行選択ボタンのエリア */
+        /* スマホ風の3列配置にするためのグリッド指定 */
         .row-keyboard {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            max-width: 450px;
+            max-width: 300px; /* 3列がきれいに収まる幅 */
             margin: 0 auto 20px auto;
         }
 
+        /* わ行を中央（2列目）に配置 */
+        #row-わ {
+            grid-column: 2;
+        }
+
+        /* 入力パッドを大きく（320x320） */
         #input-pad {
-            width: 250px;
-            height: 250px;
+            width: 320px;
+            height: 320px;
             margin: 0 auto 20px auto;
             border: 3px dashed #888;
             border-radius: 15px;
@@ -50,7 +56,7 @@
             grid-template-rows: 1fr 1fr 1fr;
             align-items: center;
             justify-items: center;
-            font-size: 24px;
+            font-size: 28px; /* パッドが大きくなった分文字も少し大きく */
             font-weight: bold;
             color: #555;
             cursor: crosshair;
@@ -61,6 +67,17 @@
             color: #888;
         }
 
+        /* 補助ボタン（記号・変換）のエリア */
+        .aux-keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+        }
+
+        /* 制御ボタン（削除・クリア）のエリア */
         .keyboard {
             display: flex;
             flex-wrap: wrap;
@@ -91,6 +108,16 @@
             font-weight: bold;
         }
 
+        /* 記号・変換ボタンの見た目 */
+        .aux-btn {
+            background-color: #e0f7fa;
+            border-color: #4dd0e1;
+        }
+        .aux-btn:hover {
+            background-color: #b2ebf2;
+        }
+
+        /* 制御ボタン（削除・クリア）の見た目 */
         .control-btn {
             background-color: #f0c0c0;
             padding: 15px 30px;
@@ -126,6 +153,17 @@
         <div></div><div id="pad-down" class="guide-char">お</div><div></div>
     </div>
 
+    <div class="aux-keyboard">
+        <button class="aux-btn" onclick="addChar('ー')">ー</button>
+        <button class="aux-btn" onclick="addChar('、')">、</button>
+        <button class="aux-btn" onclick="addChar('。')">。</button>
+        <button class="aux-btn" onclick="addChar('？')">？</button>
+        <button class="aux-btn" onclick="addChar('！')">！</button>
+        <button class="aux-btn" onclick="transformChar('dakuten')">゛</button>
+        <button class="aux-btn" onclick="transformChar('handakuten')">゜</button>
+        <button class="aux-btn" onclick="transformChar('small')">小</button>
+    </div>
+
     <div class="keyboard">
         <button class="control-btn" onclick="deleteChar()">削除</button>
         <button class="control-btn" onclick="clearAll()">クリア</button>
@@ -157,6 +195,40 @@
             updateDisplay();
         }
 
+        // --- 変換マップ（濁音・半濁音・小文字の相互トグル用） ---
+        const mapDakuten = {
+            'か':'が', 'が':'か', 'き':'ぎ', 'ぎ':'き', 'く':'ぐ', 'ぐ':'く', 'け':'げ', 'げ':'け', 'こ':'ご', 'ご':'こ',
+            'さ':'ざ', 'ざ':'さ', 'し':'じ', 'じ':'し', 'す':'ず', 'ず':'す', 'せ':'ぜ', 'ぜ':'せ', 'そ':'ぞ', 'ぞ':'そ',
+            'た':'だ', 'だ':'た', 'ち':'ぢ', 'ぢ':'ち', 'つ':'づ', 'づ':'つ', 'て':'で', 'で':'て', 'と':'ど', 'ど':'と',
+            'は':'ば', 'ば':'は', 'ひ':'び', 'び':'ひ', 'ふ':'ぶ', 'ぶ':'ふ', 'へ':'べ', 'べ':'へ', 'ほ':'ぼ', 'ぼ':'ほ'
+        };
+
+        const mapHandakuten = {
+            'は':'ぱ', 'ぱ':'は', 'ひ':'ぴ', 'ぴ':'ひ', 'ふ':'ぷ', 'ぷ':'ふ', 'へ':'ぺ', 'ぺ':'へ', 'ほ':'ぽ', 'ぽ':'ほ'
+        };
+
+        const mapSmall = {
+            'あ':'ぁ', 'ぁ':'あ', 'い':'ぃ', 'ぃ':'い', 'う':'ぅ', 'ぅ':'う', 'え':'ぇ', 'ぇ':'え', 'お':'ぉ', 'ぉ':'お',
+            'や':'ゃ', 'ゃ':'や', 'ゆ':'ゅ', 'ゅ':'ゆ', 'よ':'ょ', 'ょ':'よ', 'つ':'っ', 'っ':'つ'
+        };
+
+        function transformChar(type) {
+            if (currentText.length === 0) return;
+            
+            const lastChar = currentText.slice(-1);
+            let targetMap = null;
+
+            if (type === 'dakuten') targetMap = mapDakuten;
+            if (type === 'handakuten') targetMap = mapHandakuten;
+            if (type === 'small') targetMap = mapSmall;
+
+            // 変換マップに存在する場合のみ、最後の1文字を差し替える
+            if (targetMap && targetMap[lastChar]) {
+                currentText = currentText.slice(0, -1) + targetMap[lastChar];
+                updateDisplay();
+            }
+        }
+
         // --- 50音のフリック割り当てマップ ---
         const flickMap = {
             'あ': { center: 'あ', left: 'い', up: 'う', right: 'え', down: 'お' },
@@ -166,9 +238,10 @@
             'な': { center: 'な', left: 'に', up: 'ぬ', right: 'ね', down: 'の' },
             'は': { center: 'は', left: 'ひ', up: 'ふ', right: 'へ', down: 'ほ' },
             'ま': { center: 'ま', left: 'み', up: 'む', right: 'め', down: 'も' },
-            'や': { center: 'や', left: '',   up: 'ゆ', right: '',   down: 'よ' }, // 存在しない方向は空文字
+            'や': { center: 'や', left: '',   up: 'ゆ', right: '',   down: 'よ' },
             'ら': { center: 'ら', left: 'り', up: 'る', right: 'れ', down: 'ろ' },
-            'わ': { center: 'わ', left: '',   up: '',   right: 'を', down: 'ん' }
+            // わ行の方向をスマホ風に調整（左:を, 上:ん）
+            'わ': { center: 'わ', left: 'を', up: 'ん', right: '', down: '' }
         };
 
         let currentRow = 'あ';
@@ -192,12 +265,16 @@
             document.getElementById('pad-down').textContent = chars.down || "";
         }
 
-        // --- フリック入力の処理（前回修正版を保持） ---
+        // --- フリック入力の処理 ---
         let startX = 0;
         let startY = 0;
         let isDragging = false;
         let activePointerId = null;
-        const THRESHOLD = 30;
+        
+        // 判定を少し軽くする (30 -> 20)
+        const THRESHOLD = 20;
+        // パッド外離脱時のキャンセル猶予マージン
+        const CANCEL_MARGIN = 70;
 
         function resetDrag(e) {
             isDragging = false;
@@ -235,14 +312,15 @@
             // 先に後片付けする
             resetDrag(e);
 
-            // 入力パッドの範囲外で離した場合は、入力せずキャンセルする
+            // 猶予（マージン）を含めた入力パッドの判定枠
             const rect = inputPad.getBoundingClientRect();
             const isOutsidePad =
-                endX < rect.left ||
-                endX > rect.right ||
-                endY < rect.top ||
-                endY > rect.bottom;
+                endX < rect.left - CANCEL_MARGIN ||
+                endX > rect.right + CANCEL_MARGIN ||
+                endY < rect.top - CANCEL_MARGIN ||
+                endY > rect.bottom + CANCEL_MARGIN;
 
+            // 大きく外れた場合は入力せずキャンセル
             if (isOutsidePad) {
                 return;
             }
