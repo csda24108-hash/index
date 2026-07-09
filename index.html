@@ -28,6 +28,16 @@
             white-space: nowrap;
         }
 
+        /* 行選択ボタンのエリア */
+        .row-keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 450px;
+            margin: 0 auto 20px auto;
+        }
+
         #input-pad {
             width: 250px;
             height: 250px;
@@ -59,19 +69,32 @@
             max-width: 400px;
             margin: 0 auto;
         }
+        
         button {
             font-size: 20px;
-            padding: 15px 20px;
+            padding: 10px 15px;
             cursor: pointer;
             border: 1px solid #999;
             border-radius: 5px;
             background-color: #fff;
+            transition: 0.2s;
         }
         button:hover {
             background-color: #e0e0e0;
         }
+
+        /* 選択中の行ボタンの見た目 */
+        .row-btn.selected-row {
+            background-color: #a0c0f0;
+            border-color: #6080b0;
+            color: #fff;
+            font-weight: bold;
+        }
+
         .control-btn {
             background-color: #f0c0c0;
+            padding: 15px 30px;
+            font-weight: bold;
         }
         .control-btn:hover {
             background-color: #d0a0a0;
@@ -84,19 +107,26 @@
 
     <div id="output-area"></div>
 
+    <div class="row-keyboard">
+        <button id="row-あ" onclick="selectRow('あ')" class="row-btn selected-row">あ行</button>
+        <button id="row-か" onclick="selectRow('か')" class="row-btn">か行</button>
+        <button id="row-さ" onclick="selectRow('さ')" class="row-btn">さ行</button>
+        <button id="row-た" onclick="selectRow('た')" class="row-btn">た行</button>
+        <button id="row-な" onclick="selectRow('な')" class="row-btn">な行</button>
+        <button id="row-は" onclick="selectRow('は')" class="row-btn">は行</button>
+        <button id="row-ま" onclick="selectRow('ま')" class="row-btn">ま行</button>
+        <button id="row-や" onclick="selectRow('や')" class="row-btn">や行</button>
+        <button id="row-ら" onclick="selectRow('ら')" class="row-btn">ら行</button>
+        <button id="row-わ" onclick="selectRow('わ')" class="row-btn">わ行</button>
+    </div>
+
     <div id="input-pad">
-        <div></div><div class="guide-char">う</div><div></div>
-        <div class="guide-char">い</div><div>あ</div><div class="guide-char">え</div>
-        <div></div><div class="guide-char">お</div><div></div>
+        <div></div><div id="pad-up" class="guide-char">う</div><div></div>
+        <div id="pad-left" class="guide-char">い</div><div id="pad-center">あ</div><div id="pad-right" class="guide-char">え</div>
+        <div></div><div id="pad-down" class="guide-char">お</div><div></div>
     </div>
 
     <div class="keyboard">
-        <button onclick="addChar('あ')">あ</button>
-        <button onclick="addChar('い')">い</button>
-        <button onclick="addChar('う')">う</button>
-        <button onclick="addChar('え')">え</button>
-        <button onclick="addChar('お')">お</button>
-        
         <button class="control-btn" onclick="deleteChar()">削除</button>
         <button class="control-btn" onclick="clearAll()">クリア</button>
     </div>
@@ -127,7 +157,42 @@
             updateDisplay();
         }
 
-        // --- フリック入力の処理（修正版） ---
+        // --- 50音のフリック割り当てマップ ---
+        const flickMap = {
+            'あ': { center: 'あ', left: 'い', up: 'う', right: 'え', down: 'お' },
+            'か': { center: 'か', left: 'き', up: 'く', right: 'け', down: 'こ' },
+            'さ': { center: 'さ', left: 'し', up: 'す', right: 'せ', down: 'そ' },
+            'た': { center: 'た', left: 'ち', up: 'つ', right: 'て', down: 'と' },
+            'な': { center: 'な', left: 'に', up: 'ぬ', right: 'ね', down: 'の' },
+            'は': { center: 'は', left: 'ひ', up: 'ふ', right: 'へ', down: 'ほ' },
+            'ま': { center: 'ま', left: 'み', up: 'む', right: 'め', down: 'も' },
+            'や': { center: 'や', left: '',   up: 'ゆ', right: '',   down: 'よ' }, // 存在しない方向は空文字
+            'ら': { center: 'ら', left: 'り', up: 'る', right: 'れ', down: 'ろ' },
+            'わ': { center: 'わ', left: '',   up: '',   right: 'を', down: 'ん' }
+        };
+
+        let currentRow = 'あ';
+
+        // 行選択ボタンを押したときの処理
+        function selectRow(rowKey) {
+            currentRow = rowKey;
+            
+            // 全ての行ボタンから選択中の色（クラス）を外し、クリックされたボタンだけに付ける
+            document.querySelectorAll('.row-btn').forEach(btn => {
+                btn.classList.remove('selected-row');
+            });
+            document.getElementById('row-' + rowKey).classList.add('selected-row');
+
+            // フリック入力パッドの表示文字を更新する
+            const chars = flickMap[rowKey];
+            document.getElementById('pad-center').textContent = chars.center || "";
+            document.getElementById('pad-left').textContent = chars.left || "";
+            document.getElementById('pad-up').textContent = chars.up || "";
+            document.getElementById('pad-right').textContent = chars.right || "";
+            document.getElementById('pad-down').textContent = chars.down || "";
+        }
+
+        // --- フリック入力の処理（前回修正版を保持） ---
         let startX = 0;
         let startY = 0;
         let isDragging = false;
@@ -186,26 +251,30 @@
             const dy = endY - startY;
 
             let charToInput = "";
+            const chars = flickMap[currentRow];
 
             if (Math.abs(dx) < THRESHOLD && Math.abs(dy) < THRESHOLD) {
-                charToInput = "あ";
+                charToInput = chars.center;
             } else {
                 if (Math.abs(dx) > Math.abs(dy)) {
                     if (dx > 0) {
-                        charToInput = "え";
+                        charToInput = chars.right;
                     } else {
-                        charToInput = "い";
+                        charToInput = chars.left;
                     }
                 } else {
                     if (dy > 0) {
-                        charToInput = "お";
+                        charToInput = chars.down;
                     } else {
-                        charToInput = "う";
+                        charToInput = chars.up;
                     }
                 }
             }
 
-            addChar(charToInput);
+            // charToInput が空文字（や行・わ行の存在しない方向など）でなければ入力する
+            if (charToInput) {
+                addChar(charToInput);
+            }
         });
 
         inputPad.addEventListener("pointercancel", (e) => {
