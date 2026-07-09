@@ -8,23 +8,23 @@
         body {
             font-family: sans-serif;
             text-align: center;
-            margin-top: 10px; /* 余白を削減 */
+            margin-top: 10px;
             /* ドラッグ時のテキスト選択などを防ぐ */
             user-select: none; 
             -webkit-user-select: none;
         }
 
         h1 {
-            font-size: 22px; /* 少し小さく */
-            margin: 10px 0 15px 0;
+            font-size: 20px;
+            margin: 5px 0 8px 0;
         }
         
         #output-area {
             width: 80%;
-            max-width: 600px; /* 2列配置に合わせて少し広げる */
-            height: 50px;
+            max-width: 600px;
+            height: 40px;
             font-size: 24px;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 10px auto;
             padding: 10px;
             border: 2px solid #ccc;
             border-radius: 5px;
@@ -40,7 +40,7 @@
             flex-direction: row;
             justify-content: center;
             align-items: flex-start;
-            gap: 30px;
+            gap: 20px;
             max-width: 800px;
             margin: 0 auto;
         }
@@ -49,7 +49,7 @@
         .left-panel {
             display: flex;
             flex-direction: column;
-            gap: 15px; /* 各ボタン群の間の余白 */
+            gap: 8px;
             align-items: center;
         }
 
@@ -64,7 +64,7 @@
         .row-keyboard {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px; /* 余白を削減 */
+            gap: 6px;
             max-width: 300px;
         }
 
@@ -78,7 +78,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 8px; /* 余白を削減 */
+            gap: 6px;
             max-width: 300px;
         }
 
@@ -87,13 +87,13 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 15px;
+            gap: 10px;
         }
 
-        /* 入力パッドを少し調整（300x300） */
+        /* 入力パッド */
         #input-pad {
-            width: 300px;
-            height: 300px;
+            width: 260px;
+            height: 260px;
             border: 3px dashed #888;
             border-radius: 15px;
             background-color: #eef;
@@ -114,8 +114,8 @@
         }
         
         button {
-            font-size: 18px; /* 画面に収まりやすいよう微調整 */
-            padding: 8px 12px;
+            font-size: 16px;
+            padding: 6px 10px;
             cursor: pointer;
             border: 1px solid #999;
             border-radius: 5px;
@@ -146,17 +146,17 @@
         /* 制御ボタン（削除・クリア）の見た目 */
         .control-btn {
             background-color: #f0c0c0;
-            padding: 12px 25px;
+            padding: 10px 20px;
             font-weight: bold;
         }
         .control-btn:hover {
             background-color: #d0a0a0;
         }
 
-        /* 画面幅が狭い場合（スマホ等）は縦並びにする */
-        @media (max-width: 700px) {
+        /* 画面幅が狭い場合は縦並びにする */
+        @media (max-width: 520px) {
             .main-container {
-                flex-direction: column-reverse; /* スマホならパッドを上に持ってくる等の調整も可能ですが、今回は単純な縦並びに */
+                flex-direction: column-reverse;
                 align-items: center;
             }
         }
