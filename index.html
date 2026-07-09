@@ -8,18 +8,23 @@
         body {
             font-family: sans-serif;
             text-align: center;
-            margin-top: 30px;
+            margin-top: 10px; /* 余白を削減 */
             /* ドラッグ時のテキスト選択などを防ぐ */
             user-select: none; 
             -webkit-user-select: none;
         }
+
+        h1 {
+            font-size: 22px; /* 少し小さく */
+            margin: 10px 0 15px 0;
+        }
         
         #output-area {
             width: 80%;
-            max-width: 400px;
+            max-width: 600px; /* 2列配置に合わせて少し広げる */
             height: 50px;
             font-size: 24px;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 15px auto;
             padding: 10px;
             border: 2px solid #ccc;
             border-radius: 5px;
@@ -29,13 +34,38 @@
             white-space: nowrap;
         }
 
-        /* スマホ風の3列配置にするためのグリッド指定 */
+        /* 2列レイアウト用のメインコンテナ */
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* 左側：ボタン群 */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* 各ボタン群の間の余白 */
+            align-items: center;
+        }
+
+        /* 右側：フリックパッド */
+        .right-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 行選択ボタン（3列グリッド） */
         .row-keyboard {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            max-width: 300px; /* 3列がきれいに収まる幅 */
-            margin: 0 auto 20px auto;
+            gap: 8px; /* 余白を削減 */
+            max-width: 300px;
         }
 
         /* わ行を中央（2列目）に配置 */
@@ -43,11 +73,27 @@
             grid-column: 2;
         }
 
-        /* 入力パッドを大きく（320x320） */
+        /* 補助ボタン（記号・変換）のエリア */
+        .aux-keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px; /* 余白を削減 */
+            max-width: 300px;
+        }
+
+        /* 操作ボタン（削除・クリア）のエリア */
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* 入力パッドを少し調整（300x300） */
         #input-pad {
-            width: 320px;
-            height: 320px;
-            margin: 0 auto 20px auto;
+            width: 300px;
+            height: 300px;
             border: 3px dashed #888;
             border-radius: 15px;
             background-color: #eef;
@@ -56,7 +102,7 @@
             grid-template-rows: 1fr 1fr 1fr;
             align-items: center;
             justify-items: center;
-            font-size: 28px; /* パッドが大きくなった分文字も少し大きく */
+            font-size: 28px;
             font-weight: bold;
             color: #555;
             cursor: crosshair;
@@ -66,30 +112,10 @@
         .guide-char {
             color: #888;
         }
-
-        /* 補助ボタン（記号・変換）のエリア */
-        .aux-keyboard {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            max-width: 400px;
-            margin: 0 auto 20px auto;
-        }
-
-        /* 制御ボタン（削除・クリア）のエリア */
-        .keyboard {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
         
         button {
-            font-size: 20px;
-            padding: 10px 15px;
+            font-size: 18px; /* 画面に収まりやすいよう微調整 */
+            padding: 8px 12px;
             cursor: pointer;
             border: 1px solid #999;
             border-radius: 5px;
@@ -120,11 +146,19 @@
         /* 制御ボタン（削除・クリア）の見た目 */
         .control-btn {
             background-color: #f0c0c0;
-            padding: 15px 30px;
+            padding: 12px 25px;
             font-weight: bold;
         }
         .control-btn:hover {
             background-color: #d0a0a0;
+        }
+
+        /* 画面幅が狭い場合（スマホ等）は縦並びにする */
+        @media (max-width: 700px) {
+            .main-container {
+                flex-direction: column-reverse; /* スマホならパッドを上に持ってくる等の調整も可能ですが、今回は単純な縦並びに */
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -134,39 +168,47 @@
 
     <div id="output-area"></div>
 
-    <div class="row-keyboard">
-        <button id="row-あ" onclick="selectRow('あ')" class="row-btn selected-row">あ行</button>
-        <button id="row-か" onclick="selectRow('か')" class="row-btn">か行</button>
-        <button id="row-さ" onclick="selectRow('さ')" class="row-btn">さ行</button>
-        <button id="row-た" onclick="selectRow('た')" class="row-btn">た行</button>
-        <button id="row-な" onclick="selectRow('な')" class="row-btn">な行</button>
-        <button id="row-は" onclick="selectRow('は')" class="row-btn">は行</button>
-        <button id="row-ま" onclick="selectRow('ま')" class="row-btn">ま行</button>
-        <button id="row-や" onclick="selectRow('や')" class="row-btn">や行</button>
-        <button id="row-ら" onclick="selectRow('ら')" class="row-btn">ら行</button>
-        <button id="row-わ" onclick="selectRow('わ')" class="row-btn">わ行</button>
-    </div>
+    <div class="main-container">
+        
+        <div class="left-panel">
+            <div class="row-keyboard">
+                <button id="row-あ" onclick="selectRow('あ')" class="row-btn selected-row">あ行</button>
+                <button id="row-か" onclick="selectRow('か')" class="row-btn">か行</button>
+                <button id="row-さ" onclick="selectRow('さ')" class="row-btn">さ行</button>
+                <button id="row-た" onclick="selectRow('た')" class="row-btn">た行</button>
+                <button id="row-な" onclick="selectRow('な')" class="row-btn">な行</button>
+                <button id="row-は" onclick="selectRow('は')" class="row-btn">は行</button>
+                <button id="row-ま" onclick="selectRow('ま')" class="row-btn">ま行</button>
+                <button id="row-や" onclick="selectRow('や')" class="row-btn">や行</button>
+                <button id="row-ら" onclick="selectRow('ら')" class="row-btn">ら行</button>
+                <button id="row-わ" onclick="selectRow('わ')" class="row-btn">わ行</button>
+            </div>
 
-    <div id="input-pad">
-        <div></div><div id="pad-up" class="guide-char">う</div><div></div>
-        <div id="pad-left" class="guide-char">い</div><div id="pad-center">あ</div><div id="pad-right" class="guide-char">え</div>
-        <div></div><div id="pad-down" class="guide-char">お</div><div></div>
-    </div>
+            <div class="aux-keyboard">
+                <button class="aux-btn" onclick="addChar('ー')">ー</button>
+                <button class="aux-btn" onclick="addChar('、')">、</button>
+                <button class="aux-btn" onclick="addChar('。')">。</button>
+                <button class="aux-btn" onclick="addChar('？')">？</button>
+                <button class="aux-btn" onclick="addChar('！')">！</button>
+                <button class="aux-btn" onclick="transformChar('dakuten')">゛</button>
+                <button class="aux-btn" onclick="transformChar('handakuten')">゜</button>
+                <button class="aux-btn" onclick="transformChar('small')">小</button>
+            </div>
 
-    <div class="aux-keyboard">
-        <button class="aux-btn" onclick="addChar('ー')">ー</button>
-        <button class="aux-btn" onclick="addChar('、')">、</button>
-        <button class="aux-btn" onclick="addChar('。')">。</button>
-        <button class="aux-btn" onclick="addChar('？')">？</button>
-        <button class="aux-btn" onclick="addChar('！')">！</button>
-        <button class="aux-btn" onclick="transformChar('dakuten')">゛</button>
-        <button class="aux-btn" onclick="transformChar('handakuten')">゜</button>
-        <button class="aux-btn" onclick="transformChar('small')">小</button>
-    </div>
+            <div class="keyboard">
+                <button class="control-btn" onclick="deleteChar()">削除</button>
+                <button class="control-btn" onclick="clearAll()">クリア</button>
+            </div>
+        </div>
 
-    <div class="keyboard">
-        <button class="control-btn" onclick="deleteChar()">削除</button>
-        <button class="control-btn" onclick="clearAll()">クリア</button>
+        <div class="right-panel">
+            <div id="input-pad">
+                <div></div><div id="pad-up" class="guide-char">う</div><div></div>
+                <div id="pad-left" class="guide-char">い</div><div id="pad-center">あ</div><div id="pad-right" class="guide-char">え</div>
+                <div></div><div id="pad-down" class="guide-char">お</div><div></div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -240,7 +282,6 @@
             'ま': { center: 'ま', left: 'み', up: 'む', right: 'め', down: 'も' },
             'や': { center: 'や', left: '',   up: 'ゆ', right: '',   down: 'よ' },
             'ら': { center: 'ら', left: 'り', up: 'る', right: 'れ', down: 'ろ' },
-            // わ行の方向をスマホ風に調整（左:を, 上:ん）
             'わ': { center: 'わ', left: 'を', up: 'ん', right: '', down: '' }
         };
 
@@ -271,9 +312,7 @@
         let isDragging = false;
         let activePointerId = null;
         
-        // 判定を少し軽くする (30 -> 20)
         const THRESHOLD = 20;
-        // パッド外離脱時のキャンセル猶予マージン
         const CANCEL_MARGIN = 70;
 
         function resetDrag(e) {
